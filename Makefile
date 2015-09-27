@@ -1,14 +1,32 @@
 CC=g++
 CFLAGS=-c -Wall
 LDFLAGS=
+LIBS= -llog4cplus
+SRCDIR=src/
 SOURCES=main.cpp
-OBJECTS=$(SOURCES:.cpp=.o)
+OBJDIR=obj/
+OBJECTS=$(OBJDIR)$(SOURCES:.cpp=.o)
+
+EXECDIR=bin/
 EXECUTABLE=Paradox
 
-all: $(SOURCES) $(EXECUTABLE)
-    
+all: $(EXECUTABLE)
+	
 $(EXECUTABLE): $(OBJECTS) 
-    $(CC) $(LDFLAGS) $(OBJECTS) -o $@
+	$(CC) $(LDFLAGS) $(LIBS)  $(OBJECTS) -o $(EXECDIR)$@
 
-.cpp.o:
-    $(CC) $(CFLAGS) $< -o $@
+$(OBJECTS): | obj
+
+
+obj:
+	@mkdir -p $@
+	@mkdir -p $(EXECDIR)
+
+$(OBJDIR)%.o : $(SRCDIR)%.cpp
+	$(CC) $(CFLAGS) $< -o $@
+
+clean:
+	$(RM) -rf $(OBJDIR)
+	$(RM) -rf $(EXECDIR)	
+
+
