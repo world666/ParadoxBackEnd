@@ -1,11 +1,11 @@
 CC=g++
-CFLAGS=-c -Wall
+CFLAGS=-c -Wall -Iinclude/
 LDFLAGS=
 LIBS= -llog4cplus
 SRCDIR=src/
-SOURCES=main.cpp
+SOURCES=main.cpp log.cpp
 OBJDIR=obj/
-OBJECTS=$(OBJDIR)$(SOURCES:.cpp=.o)
+OBJECTS=$(addprefix $(OBJDIR),$(SOURCES:.cpp=.o))
 
 EXECDIR=bin/
 EXECUTABLE=Paradox

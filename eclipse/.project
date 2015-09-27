@@ -26,9 +26,19 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>log.cpp</name>
+			<type>1</type>
+			<location>/home/pi/Projects/C++/ParadoxBackEnd/src/log.cpp</location>
+		</link>
+		<link>
 			<name>main.cpp</name>
 			<type>1</type>
 			<location>/home/pi/Projects/C++/ParadoxBackEnd/src/main.cpp</location>
+		</link>
+		<link>
+			<name>include/log.h</name>
+			<type>1</type>
+			<location>/home/pi/Projects/C++/ParadoxBackEnd/include/log.h</location>
 		</link>
 	</linkedResources>
 </projectDescription>
