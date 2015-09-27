@@ -13,7 +13,15 @@ Logger& Log::getLogger()
 
 Log::Log() : PATTERN("%d{%m/%d/%y  %H:%M:%S}  - %m [%l]%n")
 {
-	SharedObjectPtr<Appender> append (new ConsoleAppender());
+	FileName = "Test.log";
+	MaxFilesCount = 5;
+	MaxFileSize = 500000;
+}
+
+void Log::Initialize()
+{
+	//SharedObjectPtr<Appender> append (new ConsoleAppender());
+	SharedAppenderPtr  append(new  RollingFileAppender(FileName, MaxFileSize, MaxFilesCount));
 	append->setName("append for  test");
 
 	/* Instantiate a layout object */

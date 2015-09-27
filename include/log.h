@@ -4,6 +4,7 @@
 #include <iostream>
 #include <log4cplus/logger.h>
 #include <log4cplus/consoleappender.h>
+#include <log4cplus/fileappender.h>
 #include <log4cplus/layout.h>
 
 using namespace log4cplus;
@@ -15,7 +16,12 @@ public:
     static Log& getInstance();
     static Logger& getLogger();
 	Log();
+	void Initialize();
 	void LogWrite(std::string msg);
+
+	std::string FileName;
+	int MaxFilesCount;
+	long MaxFileSize;
 
 private:
 
