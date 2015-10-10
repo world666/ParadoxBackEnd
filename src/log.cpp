@@ -20,21 +20,25 @@ Log::Log() : PATTERN("%d{%m/%d/%y  %H:%M:%S}  - %m [%l]%n")
 
 void Log::Initialize()
 {
-	//SharedObjectPtr<Appender> append (new ConsoleAppender());
-	SharedAppenderPtr  append(new  RollingFileAppender(FileName, MaxFileSize, MaxFilesCount));
-	append->setName("append for  test");
+	SharedObjectPtr<Appender> appendConsole (new ConsoleAppender());
+	SharedAppenderPtr  appendFile(new  RollingFileAppender(FileName, MaxFileSize, MaxFilesCount));
+	appendFile->setName("Paradox File");
+	appendConsole->setName("Paradox Console");
 
 	/* Instantiate a layout object */
-	std::auto_ptr<Layout> layout(new PatternLayout(PATTERN));
+	std::auto_ptr<Layout> layoutConsole(new PatternLayout(PATTERN));
+	std::auto_ptr<Layout> layoutFile(new PatternLayout(PATTERN));
 
 	/* Attach the layout object to the appender */
-	append->setLayout( layout );
+	appendFile->setLayout( layoutFile );
+	appendConsole->setLayout( layoutConsole );
 
 	/* Instantiate a logger object */
 	_logger = Logger::getInstance("test");
 
 	/* Attach the appender object to the  logger  */
-	_logger.addAppender(append);
+	_logger.addAppender(appendFile);
+	_logger.addAppender(appendConsole);
 
 	/* Set a priority for the logger  */
 	_logger.setLogLevel(ALL_LOG_LEVEL);
