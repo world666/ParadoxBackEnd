@@ -11,21 +11,43 @@
 #include <sys/types.h>
 #include <time.h> 
 
-
-//#include "log.h"
+#include "log.h"
 
 using namespace std;
+
+class TcpClient
+{
+public:
+	TcpClient(int client)
+	{
+		_client = client;
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		printf("create thread!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		pthread_create(&_thread, &attr, &TcpClient::HandleRequest, NULL);
+	}
+	static void* HandleRequest(void* data)
+	{
+		printf("thread started");
+		return NULL;
+	}
+private:
+
+
+	int _client;
+	pthread_t _thread;
+};
 
 
 int main() 
 { 
 	
-	/*Log& log = Log::getInstance();
+	Log& log = Log::getInstance();
 	log.FileName = "Paradox.log";
 	log.MaxFileSize = 300000;
 	log.MaxFilesCount = 2;
 	log.Initialize();
-	LOG4CPLUS_DEBUG(Log::getLogger(), "Paradox back-end start up");*/
+	LOG4CPLUS_DEBUG(Log::getLogger(), "Paradox back-end start up");
 
 	int listenfd = 0, connfd = 0, n = 0;
     struct sockaddr_in serv_addr;
@@ -64,6 +86,11 @@ int main()
 				recvBuff[n] = 0;
 				printf("%s", recvBuff);
 				ret = true;
+			}
+			if(ret)
+			{
+				printf("create client\n");
+				TcpClient* clien = new TcpClient(connfd);
 				break;
 			}
 			printf("sleep\n");
@@ -85,22 +112,3 @@ int main()
     return 0;
 }
 
-class TcpClient
-{
-public:
-	TcpClient(int client)
-	{
-		_client = client;
-		pthread_attr_t attr;
-		pthread_attr_init(&attr);
-	}
-	
-private:
-	void HandleRequest()
-	{
-		
-	}
-	
-	int _client;
-	
-};

@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c -Wall -Iinclude/
 LDFLAGS=
-LIBS= -llog4cplus
+LIBS= -lpthread  -llog4cplus
 SRCDIR=src/
 SOURCES=main.cpp log.cpp
 OBJDIR=obj/
