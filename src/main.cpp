@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <cstdarg>
 #include <sys/types.h>
 #include <time.h> 
 
@@ -15,28 +16,91 @@
 
 using namespace std;
 
+
+std::string ToString(const char* fmt, ...){
+    int size = 512;
+    char* buffer = 0;
+    buffer = new char[size];
+    va_list vl;
+    va_start(vl, fmt);
+    int nsize = vsnprintf(buffer, size, fmt, vl);
+    if(size<=nsize){ //fail delete buffer and try again
+        delete[] buffer;
+        buffer = 0;
+        buffer = new char[nsize+1]; //+1 for /0
+        nsize = vsnprintf(buffer, size, fmt, vl);
+    }
+    std::string ret(buffer);
+    va_end(vl);
+    delete[] buffer;
+    return ret;
+}
+
 class TcpClient
 {
 public:
-	TcpClient(int client)
+	TcpClient(int client) : intervalMs(50), effortCount(10)
 	{
 		_client = client;
+		free = false;
 		pthread_attr_t attr;
 		pthread_attr_init(&attr);
-		printf("create thread!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-		pthread_create(&_thread, &attr, &TcpClient::HandleRequest, NULL);
+		LOG4CPLUS_DEBUG(Log::getLogger(), "create thread");
+		pthread_create(&_thread, &attr, &TcpClient::_HandleRequest, this);
 	}
-	static void* HandleRequest(void* data)
+	static void* _HandleRequest(void* data)
 	{
-		printf("thread started");
+		TcpClient* tcpClient = static_cast<TcpClient*>(data);
+		LOG4CPLUS_DEBUG(Log::getLogger(), "thread started");
+		tcpClient->HandleRequest();
 		return NULL;
 	}
+	void HandleRequest()
+	{
+		int n = 0;
+		string request;
+	    char sendBuff[] = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 14\n\nandrey kyrylov";
+		bool ret = false;
+		int iCount = 0;
+		while(iCount < effortCount)
+		{
+			ioctl(_client, FIONREAD, &n);
+			LOG4CPLUS_DEBUG(Log::getLogger(), ToString("available: %d", n).c_str());
+			if(n > 0)
+			{
+				n = recv(_client, recvBuff, sizeof(recvBuff)-1, 0);
+				recvBuff[n] = 0;
+				request.append(recvBuff);
+				if(request.find("\n\r\n\r") != string::npos)
+				{
+					LOG4CPLUS_DEBUG(Log::getLogger(), "request finished");
+					break;
+				}
+				usleep(10);
+				ret = true;
+				continue;
+			}
+			if(ret)
+			{
+				printf("%s", request.c_str());
+				break;
+			}
+			LOG4CPLUS_DEBUG(Log::getLogger(), ToString("sleep: %d", intervalMs).c_str());
+			usleep(intervalMs);
+			iCount++;
+		}
+		write(_client, sendBuff, strlen(sendBuff));
+		close(_client);
+	}
+	bool free;
 private:
-
-
 	int _client;
 	pthread_t _thread;
+	const int intervalMs;
+	const int effortCount;
+	char recvBuff[1025];
 };
+
 
 
 int main() 
@@ -49,64 +113,50 @@ int main()
 	log.Initialize();
 	LOG4CPLUS_DEBUG(Log::getLogger(), "Paradox back-end start up");
 
-	int listenfd = 0, connfd = 0, n = 0;
+	int listenfd = 0, connfd = 0;
     struct sockaddr_in serv_addr;
+    struct sockaddr client_addr;
+    struct sockaddr_in *client_addr_in;
+    char ipstr[INET6_ADDRSTRLEN + 1];
+    int port;
+    TcpClient* clients[10];
 
-	bool ret = false;
-
-    char sendBuff[] = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 14\n\nandrey kyrylov";
-	char recvBuff[1025];
-    //time_t ticks; 
+	socklen_t c_len = sizeof(client_addr);
 
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
     memset(&serv_addr, '0', sizeof(serv_addr)); 
+    memset(clients, NULL, sizeof(clients));
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(5000); 
+    serv_addr.sin_port = htons(5000);
 
     bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
 
     listen(listenfd, 5);
 
 	printf("Server start up\n");
-    while(1)
+    while(true)
     {
-        connfd = accept(listenfd, (struct sockaddr*)NULL, NULL); 
-
-		printf("client connected\n");
-		ret = false;
-		while(1)
+        connfd = accept(listenfd, &client_addr, &c_len);
+        client_addr_in = (struct sockaddr_in *)&client_addr;
+        inet_ntop(AF_INET, &client_addr_in->sin_addr, ipstr, sizeof ipstr);
+        port = ntohs(client_addr_in->sin_port);
+        LOG4CPLUS_DEBUG(Log::getLogger(), ToString("client connected addr=%s; port=%d", ipstr, port).c_str());
+		for(int iClient = 0; iClient<10; iClient++)
 		{
-			ioctl(connfd, FIONREAD, &n);
-			printf("available: %d", n);
-			if(n > 0)
+			if(clients[iClient] == NULL)
 			{
-				n = recv(connfd, recvBuff, sizeof(recvBuff)-1, 0);
-				recvBuff[n] = 0;
-				printf("%s", recvBuff);
-				ret = true;
-			}
-			if(ret)
-			{
-				printf("create client\n");
-				TcpClient* clien = new TcpClient(connfd);
+				clients[iClient] = new TcpClient(connfd);
 				break;
 			}
-			printf("sleep\n");
-			sleep(1);
+			else if(clients[iClient]->free)
+			{
+				delete clients[iClient];
+				clients[iClient] = new TcpClient(connfd);
+				break;
+			}
 		}
-
-		
-		
-
-        //ticks = time(NULL);
-        //snprintf(sendBuff, sizeof(sendBuff), "%.24s\r\n", ctime(&ticks));
-		
-        write(connfd, sendBuff, strlen(sendBuff)); 
-
-        close(connfd);
-        sleep(1);
      }
 
     return 0;
