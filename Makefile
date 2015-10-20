@@ -3,7 +3,7 @@ CFLAGS=-c -Wall -Iinclude/
 LDFLAGS=
 LIBS= -lpthread  -llog4cplus
 SRCDIR=src/
-SOURCES=main.cpp log.cpp
+SOURCES=main.cpp log.cpp TcpClient.cpp
 OBJDIR=obj/
 OBJECTS=$(addprefix $(OBJDIR),$(SOURCES:.cpp=.o))
 

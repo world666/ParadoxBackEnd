@@ -8,98 +8,16 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <cstdarg>
 #include <sys/types.h>
-#include <time.h> 
+#include <time.h>
 
 #include "log.h"
+#include "TcpClient.h"
+
 
 using namespace std;
 
 
-std::string ToString(const char* fmt, ...){
-    int size = 512;
-    char* buffer = 0;
-    buffer = new char[size];
-    va_list vl;
-    va_start(vl, fmt);
-    int nsize = vsnprintf(buffer, size, fmt, vl);
-    if(size<=nsize){ //fail delete buffer and try again
-        delete[] buffer;
-        buffer = 0;
-        buffer = new char[nsize+1]; //+1 for /0
-        nsize = vsnprintf(buffer, size, fmt, vl);
-    }
-    std::string ret(buffer);
-    va_end(vl);
-    delete[] buffer;
-    return ret;
-}
-
-class TcpClient
-{
-public:
-	TcpClient(int client) : intervalMs(50), effortCount(10)
-	{
-		_client = client;
-		free = false;
-		pthread_attr_t attr;
-		pthread_attr_init(&attr);
-		LOG4CPLUS_DEBUG(Log::getLogger(), "create thread");
-		pthread_create(&_thread, &attr, &TcpClient::_HandleRequest, this);
-	}
-	static void* _HandleRequest(void* data)
-	{
-		TcpClient* tcpClient = static_cast<TcpClient*>(data);
-		LOG4CPLUS_DEBUG(Log::getLogger(), "thread started");
-		tcpClient->HandleRequest();
-		return NULL;
-	}
-	void HandleRequest()
-	{
-		int n = 0;
-		string request;
-	    char sendBuff[] = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 14\n\nandrey kyrylov";
-		bool ret = false;
-		int iCount = 0;
-		while(iCount < effortCount)
-		{
-			ioctl(_client, FIONREAD, &n);
-			LOG4CPLUS_DEBUG(Log::getLogger(), ToString("available: %d", n).c_str());
-			if(n > 0)
-			{
-				n = recv(_client, recvBuff, sizeof(recvBuff)-1, 0);
-				recvBuff[n] = 0;
-				request.append(recvBuff);
-				if(request.find("\n\r\n\r") != string::npos)
-				{
-					LOG4CPLUS_DEBUG(Log::getLogger(), "request finished");
-					break;
-				}
-				usleep(10);
-				ret = true;
-				continue;
-			}
-			if(ret)
-			{
-				printf("%s", request.c_str());
-				break;
-			}
-			LOG4CPLUS_DEBUG(Log::getLogger(), ToString("sleep: %d", intervalMs).c_str());
-			usleep(intervalMs);
-			iCount++;
-		}
-		write(_client, sendBuff, strlen(sendBuff));
-		close(_client);
-	}
-	bool free;
-private:
-	int _client;
-	pthread_t _thread;
-	const int intervalMs;
-	const int effortCount;
-	char recvBuff[1025];
-};
 
 
 

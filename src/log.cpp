@@ -1,4 +1,7 @@
+#include <cstdarg>
 #include "log.h"
+
+
 
 Log& Log::getInstance()
 {
@@ -42,5 +45,24 @@ void Log::Initialize()
 
 	/* Set a priority for the logger  */
 	_logger.setLogLevel(ALL_LOG_LEVEL);
+}
+
+std::string ToString(const char* fmt, ...){
+    int size = 512;
+    char* buffer = 0;
+    buffer = new char[size];
+    va_list vl;
+    va_start(vl, fmt);
+    int nsize = vsnprintf(buffer, size, fmt, vl);
+    if(size<=nsize){ //fail delete buffer and try again
+        delete[] buffer;
+        buffer = 0;
+        buffer = new char[nsize+1]; //+1 for /0
+        nsize = vsnprintf(buffer, size, fmt, vl);
+    }
+    std::string ret(buffer);
+    va_end(vl);
+    delete[] buffer;
+    return ret;
 }
 

@@ -26,6 +26,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>TcpClient.cpp</name>
+			<type>1</type>
+			<location>/home/pi/Projects/C++/ParadoxBackEnd/src/TcpClient.cpp</location>
+		</link>
+		<link>
 			<name>log.cpp</name>
 			<type>1</type>
 			<location>/home/pi/Projects/C++/ParadoxBackEnd/src/log.cpp</location>
@@ -34,6 +39,11 @@
 			<name>main.cpp</name>
 			<type>1</type>
 			<location>/home/pi/Projects/C++/ParadoxBackEnd/src/main.cpp</location>
+		</link>
+		<link>
+			<name>include/TcpClient.h</name>
+			<type>1</type>
+			<location>/home/pi/Projects/C++/ParadoxBackEnd/include/TcpClient.h</location>
 		</link>
 		<link>
 			<name>include/log.h</name>

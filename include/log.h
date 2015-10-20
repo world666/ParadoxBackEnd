@@ -30,6 +30,8 @@ private:
 	const std::string PATTERN;
 };
 
+std::string ToString(const char* fmt, ...);
+
 
 #endif
 
