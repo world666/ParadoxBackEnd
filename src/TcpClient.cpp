@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <vector>
 
 #include "log.h"
 #include "TcpClient.h"
@@ -39,11 +40,12 @@ void TcpClient::HandleRequest()
 {
 	int n = 0;
 	string request;
-	bool headFinished = false;
-	bool contentExsists = false;
-	bool reqFinished = false;
-	char sendBuff[] = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 14\n\nandrey kyrylov";
-	bool ret = false;
+	string content;
+	char recvBuff[1024];
+	char sendBuff[] = "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: *\nContent-Type: json\nContent-Length: 19\n\n{\"name\" : \"andrii\"}";
+	int contentPos = 0;
+	int contetnLength = 0;
+	unsigned int contentTagPos;
 	int iCount = 0;
 	while(iCount < effortCount)
 	{
@@ -52,15 +54,19 @@ void TcpClient::HandleRequest()
 		if(n > 0)
 		{
 			n = recv(_client, recvBuff, sizeof(recvBuff)-1, 0);
+			LOG4CPLUS_DEBUG(Log::getLogger(), ToString("read: %d", n).c_str());
 			recvBuff[n] = 0;
 			request.append(recvBuff);
-			if(request.find("\r\n\r\n") != string::npos)
+			if(request.find("\r\n\r\n") != string::npos && contentPos == 0)
 			{
+				contentPos = request.find("\r\n\r\n") + 4;
+				contentTagPos = request.find("Content-Length:");
 				LOG4CPLUS_DEBUG(Log::getLogger(), "head finished");
-				headFinished = true;
-				if(request.find("Content-Length:") != string::npos)
+				if(contentTagPos != string::npos)
 				{
-					contentExsists = true;
+
+					sscanf (request.c_str() + contentTagPos,"Content-Length: %d", &contetnLength);
+					LOG4CPLUS_DEBUG(Log::getLogger(), ToString("content-length: %d", contetnLength).c_str());
 				}
 				else
 				{
@@ -68,19 +74,21 @@ void TcpClient::HandleRequest()
 					break;
 				}
 			}
-			usleep(10);
-			ret = true;
+			if(contentPos && (request.length() - contentPos) == contetnLength)
+			{
+				LOG4CPLUS_DEBUG(Log::getLogger(), "request finished");
+				content = request.substr(contentPos, contetnLength);
+				break;
+			}
+			usleep(intervalMs);
 			continue;
-		}
-		if(ret)
-		{
-			break;
 		}
 		LOG4CPLUS_DEBUG(Log::getLogger(), ToString("sleep: %d", intervalMs).c_str());
 		usleep(intervalMs);
 		iCount++;
 	}
-	printf("%s", request.c_str());
+	LOG4CPLUS_DEBUG(Log::getLogger(), request.c_str());
 	write(_client, sendBuff, strlen(sendBuff));
 	close(_client);
+	free = true;
 }

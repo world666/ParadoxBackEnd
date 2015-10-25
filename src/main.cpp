@@ -37,7 +37,7 @@ int main()
     struct sockaddr_in *client_addr_in;
     char ipstr[INET6_ADDRSTRLEN + 1];
     int port;
-    TcpClient* clients[10];
+    TcpClient* clients[2];
 
 	socklen_t c_len = sizeof(client_addr);
 
@@ -61,7 +61,7 @@ int main()
         inet_ntop(AF_INET, &client_addr_in->sin_addr, ipstr, sizeof ipstr);
         port = ntohs(client_addr_in->sin_port);
         LOG4CPLUS_DEBUG(Log::getLogger(), ToString("client connected addr=%s; port=%d", ipstr, port).c_str());
-		for(int iClient = 0; iClient<10; iClient++)
+		for(int iClient = 0; iClient<2; iClient++)
 		{
 			if(clients[iClient] == NULL)
 			{
