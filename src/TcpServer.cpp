@@ -25,7 +25,8 @@ TcpServer::TcpServer(int portNumber, int threadsCount)
 	_listenfd = socket(AF_INET, SOCK_STREAM, 0);
 	bind(_listenfd, (struct sockaddr*)&_servAddr, sizeof(_servAddr));
 	listen(_listenfd, 5);
-	memset(_clients, 0, sizeof(_clients));
+	_clients = new TcpClient *[_threadsCount];
+	for(int i=0; i<_threadsCount; i++) _clients[i] = NULL;
 }
 
 void TcpServer::Start()
@@ -34,6 +35,7 @@ void TcpServer::Start()
 	struct sockaddr_in client_addr_in;
 	char ipstr[INET6_ADDRSTRLEN + 1];
 	int port;
+	int iClient;
 	socklen_t c_len = sizeof(client_addr_in);
 
 	LOG4CPLUS_DEBUG(Log::getLogger(),"Server start up");
@@ -43,18 +45,26 @@ void TcpServer::Start()
 		inet_ntop(AF_INET, &client_addr_in.sin_addr, ipstr, sizeof ipstr);
 		port = ntohs(client_addr_in.sin_port);
 		LOG4CPLUS_DEBUG(Log::getLogger(), ToString("client connected addr=%s; port=%d", ipstr, port).c_str());
-		for(int iClient = 0; iClient<2; iClient++)
+		iClient = 0;
+		while(true)
 		{
 			if(_clients[iClient] == NULL)
 			{
+				LOG4CPLUS_DEBUG(Log::getLogger(), ToString("client thread number=%d (creation)", iClient).c_str());
 				_clients[iClient] = new TcpClient(connfd);
 				break;
 			}
 			else if(_clients[iClient]->free)
 			{
-				delete _clients[iClient];
-				_clients[iClient] = new TcpClient(connfd);
+				LOG4CPLUS_DEBUG(Log::getLogger(), ToString("client thread number=%d (reinit)", iClient).c_str());
+				_clients[iClient]->ReInit(connfd);
 				break;
+			}
+			iClient++;
+			if(iClient >= _threadsCount)
+			{
+				iClient = 0;
+				usleep(20);
 			}
 		}
 	 }

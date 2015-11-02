@@ -1,7 +1,8 @@
-#ifndef LOG
+#include <iostream>
+
+#if not defined LOG && defined _LOG
 #define LOG
 
-#include <iostream>
 #include <log4cplus/logger.h>
 #include <log4cplus/consoleappender.h>
 #include <log4cplus/fileappender.h>
@@ -29,10 +30,13 @@ private:
 
 	const std::string PATTERN;
 };
-
 std::string ToString(const char* fmt, ...);
-
-
 #endif
+#if not defined LOG && not defined _LOG
+std::string ToString(const char* fmt, ...);
+#define LOG4CPLUS_DEBUG(ignore, text) printf(text); printf("\n");
+#endif
+
+
 
 

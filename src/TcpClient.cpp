@@ -1,8 +1,4 @@
 #include <iostream>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -23,17 +19,37 @@ TcpClient::TcpClient(int client) : _intervalMs(50), _effortCount(10)
 {
 	_client = client;
 	free = false;
+	conditionVar = PTHREAD_COND_INITIALIZER;
+	conditionMutex = PTHREAD_MUTEX_INITIALIZER;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	LOG4CPLUS_DEBUG(Log::getLogger(), "create thread");
 	pthread_create(&_thread, &attr, &TcpClient::_HandleRequest, this);
 }
 
+void TcpClient::ReInit(int client)
+{
+	_client = client;
+	free = false;
+	pthread_mutex_lock(&conditionMutex);
+	pthread_cond_signal(&conditionVar);
+	pthread_mutex_unlock(&conditionMutex);
+}
+
 void* TcpClient::_HandleRequest(void* data)
 {
-	TcpClient* tcpClient = static_cast<TcpClient*>(data);
-	LOG4CPLUS_DEBUG(Log::getLogger(), "thread started");
-	tcpClient->HandleRequest();
+	while(true)
+	{
+		TcpClient* tcpClient = static_cast<TcpClient*>(data);
+		pthread_mutex_lock(&(tcpClient->conditionMutex));
+		LOG4CPLUS_DEBUG(Log::getLogger(), "thread started");
+		tcpClient->HandleRequest();
+		tcpClient->free = true;
+		LOG4CPLUS_DEBUG(Log::getLogger(), "thread finished");
+		pthread_cond_wait(&(tcpClient->conditionVar), &(tcpClient->conditionMutex));
+		pthread_mutex_unlock(&(tcpClient->conditionMutex));
+	}
 	return NULL;
 }
 
@@ -89,5 +105,4 @@ void TcpClient::HandleRequest()
 	LOG4CPLUS_DEBUG(Log::getLogger(), _request.c_str());
 	write(_client, sendBuff, strlen(sendBuff));
 	close(_client);
-	free = true;
 }

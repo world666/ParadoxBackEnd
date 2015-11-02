@@ -16,7 +16,7 @@ private:
 	int _portNumber;
 	int _threadsCount;
 	struct sockaddr_in _servAddr;
-	TcpClient* _clients[2];
+	TcpClient** _clients;
 };
 
 #endif

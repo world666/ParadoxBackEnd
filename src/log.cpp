@@ -1,8 +1,14 @@
 #include <cstdarg>
+#include <iostream>
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <wchar.h>
+
 #include "log.h"
 
 
-
+#ifdef LOG
 Log& Log::getInstance()
 {
 	static Log instance; // Guaranteed to be destroyed.
@@ -46,7 +52,7 @@ void Log::Initialize()
 	/* Set a priority for the logger  */
 	_logger.setLogLevel(ALL_LOG_LEVEL);
 }
-
+#endif
 std::string ToString(const char* fmt, ...){
     int size = 512;
     char* buffer = 0;
