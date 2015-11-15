@@ -60,7 +60,8 @@ void TcpClient::HandleRequest()
 {
 	int n = 0;
 	char recvBuff[1024];
-	char sendBuff[] = "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: *\nContent-Type: json\nContent-Length: 19\n\n{\"name\" : \"andrii\"}";
+	string sendBuff = "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: *\nContent-Type: json\nContent-Length: ";
+	char contentSize[25];
 	int contentPos = 0;
 	int contetnLength = 0;
 	unsigned int contentTagPos;
@@ -106,7 +107,12 @@ void TcpClient::HandleRequest()
 		iCount++;
 	}
 	LOG4CPLUS_DEBUG(Log::getLogger(), _request.c_str());
-	_requestCallback(_content);
-	write(_client, sendBuff, strlen(sendBuff));
+	string answer =_requestCallback(_content);
+	sprintf(contentSize,"%d", answer.length());
+	sendBuff.append(contentSize);
+	sendBuff.append("\n\n");
+	sendBuff.append(answer);
+	LOG4CPLUS_DEBUG(Log::getLogger(), ToString("answer: %s", sendBuff.c_str()).c_str());
+	write(_client, sendBuff.c_str(), sendBuff.length());
 	close(_client);
 }

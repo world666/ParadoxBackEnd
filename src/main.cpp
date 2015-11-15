@@ -23,7 +23,7 @@ using namespace std;
 string Callback (string request)
 {
 	LOG4CPLUS_DEBUG(Log::getLogger(), request.c_str());
-	return "Paradox";
+	return "{\"name\" : \"andrii\"}";
 }
 
 TcpServer tcpServer(5000, 8, Callback);
