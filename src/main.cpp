@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <time.h>
 
+
 #include "log.h"
 #include "TcpServer.h"
 
@@ -19,8 +20,13 @@
 using namespace std;
 
 
+string Callback (string request)
+{
+	LOG4CPLUS_DEBUG(Log::getLogger(), request.c_str());
+	return "Paradox";
+}
 
-TcpServer tcpServer(5000, 8);
+TcpServer tcpServer(5000, 8, Callback);
 
 int main() 
 { 

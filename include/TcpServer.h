@@ -6,12 +6,12 @@
 class TcpServer
 {
 public:
-	TcpServer(int portNumber, int threadsCount);
-
+	TcpServer(int portNumber, int threadsCount, RequestCallback requestCallback);
 	void Start(void);
 
 private:
 
+	RequestCallback _requestCallback;
 	int _listenfd;
 	int _portNumber;
 	int _threadsCount;

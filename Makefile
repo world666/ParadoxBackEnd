@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -Wall -Iinclude/
+CFLAGS=-c -Wall -Iinclude/ -D _LOG
 LDFLAGS=
 LIBS= -lpthread  -llog4cplus
 SRCDIR=src/

@@ -13,7 +13,7 @@ typedef std::string (*RequestCallback)(std::string request);
 class TcpClient
 {
 public:
-	TcpClient(int client);
+	TcpClient(int client, RequestCallback requestCallback);
 	void ReInit(int client);
 	static void* _HandleRequest(void* data);
 	void HandleRequest();

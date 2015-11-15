@@ -15,9 +15,10 @@ using namespace std;
 
 
 
-TcpClient::TcpClient(int client) : _intervalMs(50), _effortCount(10)
+TcpClient::TcpClient(int client, RequestCallback requestCallback) : _intervalMs(50), _effortCount(10)
 {
 	_client = client;
+	_requestCallback = requestCallback;
 	free = false;
 	conditionVar = PTHREAD_COND_INITIALIZER;
 	conditionMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -31,6 +32,8 @@ TcpClient::TcpClient(int client) : _intervalMs(50), _effortCount(10)
 void TcpClient::ReInit(int client)
 {
 	_client = client;
+	_request.clear();
+	_content.clear();
 	free = false;
 	pthread_mutex_lock(&conditionMutex);
 	pthread_cond_signal(&conditionVar);
@@ -103,6 +106,7 @@ void TcpClient::HandleRequest()
 		iCount++;
 	}
 	LOG4CPLUS_DEBUG(Log::getLogger(), _request.c_str());
+	_requestCallback(_content);
 	write(_client, sendBuff, strlen(sendBuff));
 	close(_client);
 }

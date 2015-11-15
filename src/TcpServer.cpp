@@ -14,10 +14,11 @@
 #include "TcpServer.h"
 
 
-TcpServer::TcpServer(int portNumber, int threadsCount)
+TcpServer::TcpServer(int portNumber, int threadsCount, RequestCallback requestCallback)
 {
 	_portNumber = portNumber;
 	_threadsCount = threadsCount;
+	_requestCallback = requestCallback;
 	memset(&_servAddr, '0', sizeof(_servAddr));
 	_servAddr.sin_family = AF_INET;
 	_servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -51,7 +52,7 @@ void TcpServer::Start()
 			if(_clients[iClient] == NULL)
 			{
 				LOG4CPLUS_DEBUG(Log::getLogger(), ToString("client thread number=%d (creation)", iClient).c_str());
-				_clients[iClient] = new TcpClient(connfd);
+				_clients[iClient] = new TcpClient(connfd, _requestCallback);
 				break;
 			}
 			else if(_clients[iClient]->free)
